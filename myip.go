@@ -12,7 +12,7 @@ SYNOPSIS:
 
 OPTIONS:
 	-h, --help		# Show usage.
-	-a, --all		# Same as -e, -p.
+	-a, --all		# Same as -e, -p (default).
 	-e, --ethernet		# Print ethernet IP address.
 	-p, --public		# Print public IP address.
 	-v, --version		# Show version number.
