@@ -1,34 +1,15 @@
-# SearchableList
+NAME:
+	myip – list IP addresses.
 
-	Package `searchablelist` implements the `list` package doubly linked list
-	and extends it with search methods
+SYNOPSIS:
+	myip [ opts... ]
 
-    type SearchableList
-        New () *SearchableList
-        ContainsElement (t *Element) bool
-        Contains (t *Element) bool
-        ContainsValue (v interface{}) bool
-        FindFirst (v interface{}) *Element
-        FindLast (v interface{}) *Element
-        FindAll (v interface{}) []*Element
+OPTIONS:
+	-h, --help        # Show usage
+	-a, --all					# Same as -e, -p.
+	-e, --ethernet		# Print ethernet IP address.
+	-p, --public			# Print public IP address.
+	-v, --version     # Show version number
 
-    type Element
-        func (e *Element) Next() *Element
-        func (e *Element) Prev() *Element
-
-    type List
-        func (l *List) Back() *Element
-        func (l *List) Front() *Element
-        func (l *List) Init() *List
-        func (l *List) InsertAfter(v interface{}, mark *Element) *Element
-        func (l *List) InsertBefore(v interface{}, mark *Element) *Element
-        func (l *List) Len() int
-        func (l *List) MoveAfter(e, mark *Element)
-        func (l *List) MoveBefore(e, mark *Element)
-        func (l *List) MoveToBack(e *Element)
-        func (l *List) MoveToFront(e *Element)
-        func (l *List) PushBack(v interface{}) *Element
-        func (l *List) PushBackList(other *List)
-        func (l *List) PushFront(v interface{}) *Element
-        func (l *List) PushFrontList(other *List)
-        func (l *List) Remove(e *Element) interface{}
+EXAMPLES:
+	myip -a			# list all IP addresses (1 per line).
