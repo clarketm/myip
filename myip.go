@@ -5,18 +5,18 @@ Use of this source code is governed by a Apache-2.0
 license that can be found in the LICENSE file.
 
 NAME:
-	myip – list IP addresses.
+myip – list IP addresses.
 
 SYNOPSIS:
-	myip [ opts... ]
+myip [ opts... ]
 
 OPTIONS:
-	-a, --all		# Same as -e, -p.
-	-e, --ethernet		# Print ethernet IP address.
-	-p, --public		# Print public IP address.
+-a, --all		# Same as -e, -p.
+-e, --ethernet		# Print ethernet IP address.
+-p, --public		# Print public IP address.
 
 EXAMPLES:
-	myip -a			# list all IP addresses (1 per line).
+myip -a			# list all IP addresses (1 per line).
 
 */
 
@@ -25,30 +25,77 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"net"
+	"net/http"
 	"os"
-	"os/exec"
-	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
 )
 
-var all bool
+// VERSION - current version number
+const VERSION = "v1.0.0"
+
+// allFlag bool
+type allFlag bool
+
+func (a *allFlag) IsBoolFlag() bool {
+	return true
+}
+
+func (a *allFlag) String() string {
+	return "false"
+}
+
+func (a *allFlag) Set(value string) error {
+	ethernet = true
+	public = true
+	return nil
+}
+
+// versionFlag bool
+type versionFlag bool
+
+func (v *versionFlag) IsBoolFlag() bool {
+	return true
+}
+
+func (v *versionFlag) String() string {
+	return "false"
+}
+
+func (v *versionFlag) Set(value string) error {
+	println()
+	fmt.Printf("%s %v", bold("Version:"), VERSION)
+	println()
+	os.Exit(0)
+	return nil
+}
+
+// Flags
+var all allFlag
+var version versionFlag
 var ethernet bool
 var public bool
 
+// Globals
+var statusCode int
+var bold = color.New(color.Bold).SprintFunc()
+
+// init () - initialize command-line flags
 func init() {
 	const (
-		defaultAll      = false
 		usageAll        = "Same as --ethernet, --public."
+		usageVersion    = "Print version"
 		defaultEthernet = false
 		usageEthernet   = "Print ethernet IP address."
 		defaultPublic   = false
 		usagePublic     = "Print public IP address."
 	)
 	// -a, --all
-	flag.BoolVar(&all, "a", defaultAll, "")
-	flag.BoolVar(&all, "all", defaultAll, usageAll)
+	flag.Var(&all, "a", "")
+	flag.Var(&all, "all", usageAll)
 
 	// -e, --ethernet
 	flag.BoolVar(&ethernet, "e", defaultEthernet, "")
@@ -58,62 +105,85 @@ func init() {
 	flag.BoolVar(&public, "p", defaultPublic, "")
 	flag.BoolVar(&public, "public", defaultPublic, usagePublic)
 
+	// -v, --version
+	flag.Var(&version, "v", "")
+	flag.Var(&version, "version", usageVersion)
+
 	// Usage
 	flag.Usage = func() {
+		println()
 		fmt.Fprintf(os.Stdout, "Usage of %s:\n", os.Args[0])
 		flag.PrintDefaults()
-		os.Exit(0)
+		println()
+		os.Exit(statusCode)
 	}
 }
 
+// main ()
 func main() {
 	flag.Parse()
 
-	if all {
-		ethernet = true
-		public = true
-	}
-
-	bold := color.New(color.Bold).SprintFunc()
-	println()
-	if ethernet {
-		fmt.Printf("%s %v", bold("Ethernet:"), getPublicIP())
-	}
-	if public {
-		fmt.Printf("%s %v", bold("Public:"), getPrivateIP())
-	}
-	println()
-}
-
-func getPublicIP() string {
-	var (
-		cmdOut []byte
-		err    error
-	)
-	cmdOut, err = exec.Command("dig", "+short", "@resolver1.opendns.com", "myip.opendns.com").Output()
-	if err != nil {
-		// fmt.Fprintln(os.Stderr, "There was an error retreiving public IP: ", err)
-		// os.Exit(1)
-	}
-	return string(cmdOut)
-}
-
-func getPrivateIP() string {
-	var (
-		cmdOutSlice []string
-		cmdOut      []byte
-		err         error
-	)
-
-	for i := 0; ; i++ {
-		cmdOut, err = exec.Command("ipconfig", "getifaddr", fmt.Sprintf("en%s", strconv.Itoa(i))).Output()
-		if err != nil {
-			// fmt.Fprintln(os.Stderr, "There was an error retreiving private IP: ", err)
-			// os.Exit(1)
-			break
+	if !ethernet && !public {
+		statusCode = 0
+		flag.Usage()
+	} else {
+		println()
+		if ethernet {
+			fmt.Printf("%s %v\n", bold("Ethernet:"), getPublicIP())
 		}
-		cmdOutSlice = append(cmdOutSlice, string(cmdOut))
+		if public {
+			fmt.Printf("%s %v\n", bold("Public:"), getPrivateIP())
+		}
+		println()
+	}
+}
+
+// getPublicIP () string - get public IP address
+func getPublicIP() string {
+	var ipAddress string
+
+	checkError := func(err error) {
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "There was an error retreiving public IP: ", err)
+			os.Exit(1)
+		}
 	}
 
-	return strings.Join(cmdOutSlice, ",")
+	resp, err := http.Get("http://diagnostic.opendns.com/myip")
+	checkError(err)
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	checkError(err)
+	ipAddress = string(body)
+
+	return strings.TrimSpace(ipAddress)
+}
+
+// getPrivateIP () string - get private IP address(es)
+func getPrivateIP() string {
+	ipAddresses := []string{}
+
+	checkError := func(err error) {
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "There was an error retreiving private IP: ", err)
+			os.Exit(1)
+		}
+	}
+
+	ifaces, err := net.Interfaces()
+	checkError(err)
+	for _, iface := range ifaces {
+		if strings.HasPrefix(iface.Name, "e") {
+			addrs, err := iface.Addrs()
+			checkError(err)
+			for _, addr := range addrs {
+				if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+					if ipnet.IP.To4() != nil {
+						ipAddresses = append(ipAddresses, ipnet.IP.String())
+					}
+				}
+			}
+		}
+	}
+	return strings.TrimSpace(strings.Join(ipAddresses, ","))
 }
