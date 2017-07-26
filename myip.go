@@ -31,6 +31,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
@@ -51,8 +52,9 @@ func (a *allFlag) String() string {
 }
 
 func (a *allFlag) Set(value string) error {
-	ethernet = true
-	public = true
+	v, _ := strconv.ParseBool(value)
+	ethernet = v
+	public = v
 	return nil
 }
 
@@ -125,6 +127,9 @@ func init() {
 func main() {
 	flag.Parse()
 
+	if flag.NFlag() == 0 {
+		all.Set("true") // 1, 0, t, f, T, F, true, false, TRUE, FALSE, True, False
+	}
 	if !ethernet && !public {
 		statusCode = 0
 		flag.Usage()
