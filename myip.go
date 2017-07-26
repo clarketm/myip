@@ -5,18 +5,20 @@ Use of this source code is governed by a Apache-2.0
 license that can be found in the LICENSE file.
 
 NAME:
-myip – list IP addresses.
+	myip – list IP addresses.
 
 SYNOPSIS:
-myip [ opts... ]
+	myip [ opts... ]
 
 OPTIONS:
--a, --all		# Same as -e, -p.
--e, --ethernet		# Print ethernet IP address.
--p, --public		# Print public IP address.
+	-h, --help		# Show usage.
+	-a, --all		# Same as -e, -p.
+	-e, --ethernet		# Print ethernet IP address.
+	-p, --public		# Print public IP address.
+	-v, --version		# Show version number.
 
 EXAMPLES:
-myip -a			# list all IP addresses (1 per line).
+	myip -a			# list all IP addresses.
 
 */
 
