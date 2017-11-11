@@ -1,5 +1,7 @@
 # [myip](https://godoc.org/github.com/clarketm/myip)
 
+Command line utility for displaying public and private, ethernet IP addresses.
+
 ```shell
 NAME:
     myip – list IP addresses.
