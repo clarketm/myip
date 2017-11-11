@@ -1,3 +1,5 @@
+# [myip](https://godoc.org/github.com/clarketm/myip)
+
 ```shell
 NAME:
     myip – list IP addresses.
