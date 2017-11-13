@@ -136,10 +136,10 @@ func main() {
 	} else {
 		println()
 		if ethernet {
-			fmt.Printf("%s %v\n", bold("Ethernet:"), getPublicIP())
+			fmt.Printf("%s %v\n", bold("Ethernet:"), getPrivateIP())
 		}
 		if public {
-			fmt.Printf("%s %v\n", bold("Public:"), getPrivateIP())
+			fmt.Printf("%s %v\n", bold("Public:"), getPublicIP())
 		}
 		println()
 	}
