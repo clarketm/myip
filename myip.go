@@ -13,8 +13,8 @@ SYNOPSIS:
 OPTIONS:
 	-h, --help		# Show usage.
 	-a, --all		# Same as -e, -p (default).
-	-e, --ethernet		# Print ethernet IP address.
-	-p, --public		# Print public IP address.
+	-e, --ethernet		# Print (IPv4/IPv6) ethernet IP address.
+	-p, --public		# Print (IPv4) public IP address.
 	-v, --version		# Show version number.
 
 EXAMPLES:
@@ -136,10 +136,17 @@ func main() {
 	} else {
 		println()
 		if ethernet {
-			fmt.Printf("%s %v\n", bold("Ethernet:"), getPrivateIP())
+			ipv4, ipv6 := getPrivateIP()
+			if len(ipv4) > 0 {
+				fmt.Printf("%s %v\n", bold("Ethernet (IPv4):"), ipv4)
+			}
+			if len(ipv6) > 0 {
+				fmt.Printf("%s %v\n", bold("Ethernet (IPv6):"), ipv6)
+			}
 		}
+		println()
 		if public {
-			fmt.Printf("%s %v\n", bold("Public:"), getPublicIP())
+			fmt.Printf("%s %v\n", bold("Public (IPv4):"), getPublicIP())
 		}
 		println()
 	}
@@ -166,9 +173,10 @@ func getPublicIP() string {
 	return strings.TrimSpace(ipAddress)
 }
 
-// getPrivateIP () string - get private IP address(es)
-func getPrivateIP() string {
-	ipAddresses := []string{}
+// getPrivateIP () (string, string) - get private IP address(es)
+func getPrivateIP() (string, string) {
+	ipv4Addresses := []string{}
+	ipv6Addresses := []string{}
 
 	checkError := func(err error) {
 		if err != nil {
@@ -186,11 +194,13 @@ func getPrivateIP() string {
 			for _, addr := range addrs {
 				if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 					if ipnet.IP.To4() != nil {
-						ipAddresses = append(ipAddresses, ipnet.IP.String())
+						ipv4Addresses = append(ipv4Addresses, ipnet.IP.String())
+					} else {
+						ipv6Addresses = append(ipv6Addresses, ipnet.IP.String())
 					}
 				}
 			}
 		}
 	}
-	return strings.TrimSpace(strings.Join(ipAddresses, ","))
+	return strings.TrimSpace(strings.Join(ipv4Addresses, ", ")), strings.TrimSpace(strings.Join(ipv6Addresses, ", "))
 }
