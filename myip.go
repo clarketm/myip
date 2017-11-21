@@ -160,8 +160,8 @@ func main() {
 
 // getPublicIP () (string, string) - get public IP address
 func getPublicIP() (string, string) {
-	cv4 := make(chan string)
-	cv6 := make(chan string)
+	chV4 := make(chan string)
+	chV6 := make(chan string)
 
 	makeRequest := func(url string, ch chan string) {
 		resp, err := http.Get(url)
@@ -178,43 +178,75 @@ func getPublicIP() (string, string) {
 		ch <- string(body)
 	}
 
-	go makeRequest("http://v4.ident.me/", cv4)
-	go makeRequest("http://v6.ident.me/", cv6)
+	go makeRequest("http://v4.ident.me/", chV4)
+	go makeRequest("http://v6.ident.me/", chV6)
 
-	ipv4Address := <-cv4
-	ipv6Address := <-cv6
+	ipv4Address := <-chV4
+	ipv6Address := <-chV6
 
 	return strings.TrimSpace(ipv4Address), strings.TrimSpace(ipv6Address)
 }
 
 // getPrivateIP () (string, string) - get private IP address(es)
 func getPrivateIP() (string, string) {
+	chEtherV4 := make(chan string, 10)
+	chEtherV6 := make(chan string, 10)
+
+	go getInterface("e", chEtherV4, chEtherV6)
+
 	ipv4Addresses := []string{}
 	ipv6Addresses := []string{}
 
-	checkError := func(err error) {
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "There was an error retreiving private IP: ", err)
-			os.Exit(1)
+	for {
+		select {
+		case ipV4, ok := <-chEtherV4:
+			if !ok {
+				chEtherV4 = nil
+			} else {
+				ipv4Addresses = append(ipv4Addresses, ipV4)
+			}
+		case ipV6, ok := <-chEtherV6:
+			if !ok {
+				chEtherV6 = nil
+			} else {
+				ipv6Addresses = append(ipv6Addresses, ipV6)
+			}
+		}
+		if chEtherV4 == nil && chEtherV6 == nil {
+			break
 		}
 	}
 
+	return strings.TrimSpace(strings.Join(ipv4Addresses, ", ")), strings.TrimSpace(strings.Join(ipv6Addresses, ", "))
+}
+
+func getInterface(prefix string, chV4 chan string, chV6 chan string) {
 	ifaces, err := net.Interfaces()
-	checkError(err)
+	if err != nil {
+		close(chV4)
+		close(chV6)
+		return
+	}
 	for _, iface := range ifaces {
-		if strings.HasPrefix(iface.Name, "e") {
+		if strings.HasPrefix(iface.Name, prefix) {
 			addrs, err := iface.Addrs()
-			checkError(err)
+			if err != nil {
+				close(chV4)
+				close(chV6)
+				return
+			}
 			for _, addr := range addrs {
 				if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 					if ipnet.IP.To4() != nil {
-						ipv4Addresses = append(ipv4Addresses, ipnet.IP.String())
+						chV4 <- ipnet.IP.String()
 					} else {
-						ipv6Addresses = append(ipv6Addresses, ipnet.IP.String())
+						chV6 <- ipnet.IP.String()
 					}
 				}
 			}
+
 		}
 	}
-	return strings.TrimSpace(strings.Join(ipv4Addresses, ", ")), strings.TrimSpace(strings.Join(ipv6Addresses, ", "))
+	close(chV4)
+	close(chV6)
 }
