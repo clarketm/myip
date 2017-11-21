@@ -14,7 +14,7 @@ OPTIONS:
 	-h, --help		# Show usage.
 	-a, --all		# Same as -e, -p (default).
 	-e, --ethernet		# Print (IPv4/IPv6) ethernet IP address.
-	-p, --public		# Print (IPv4) public IP address.
+	-p, --public		# Print (IPv4/IPv6) public IP address.
 	-v, --version		# Show version number.
 
 EXAMPLES:
@@ -146,31 +146,41 @@ func main() {
 		}
 		println()
 		if public {
-			fmt.Printf("%s %v\n", bold("Public (IPv4):"), getPublicIP())
+			ipv4, ipv6 := getPublicIP()
+			if len(ipv4) > 0 {
+				fmt.Printf("%s %v\n", bold("Public (IPv4):"), ipv4)
+			}
+			if len(ipv6) > 0 {
+				fmt.Printf("%s %v\n", bold("Public (IPv6):"), ipv6)
+			}
 		}
 		println()
 	}
 }
 
-// getPublicIP () string - get public IP address
-func getPublicIP() string {
-	var ipAddress string
+// getPublicIP () (string, string) - get public IP address
+func getPublicIP() (string, string) {
+	var ipv4Address string
+	var ipv6Address string
 
-	checkError := func(err error) {
+	makeRequest := func(url string) string {
+		var ip string
+		resp, err := http.Get(url)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "There was an error retreiving public IP: ", err)
-			os.Exit(1)
+			return ip
 		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return ip
+		}
+		return string(body)
 	}
 
-	resp, err := http.Get("http://diagnostic.opendns.com/myip")
-	checkError(err)
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	checkError(err)
-	ipAddress = string(body)
+	ipv4Address = makeRequest("http://v4.ident.me/")
+	ipv6Address = makeRequest("http://v6.ident.me/")
 
-	return strings.TrimSpace(ipAddress)
+	return strings.TrimSpace(ipv4Address), strings.TrimSpace(ipv6Address)
 }
 
 // getPrivateIP () (string, string) - get private IP address(es)
