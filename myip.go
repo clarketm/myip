@@ -40,7 +40,7 @@ import (
 )
 
 // VERSION - current version number
-const VERSION = "v1.1.1"
+const VERSION = "v1.4.1"
 
 // allFlag bool
 type allFlag bool
