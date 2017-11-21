@@ -12,8 +12,9 @@ SYNOPSIS:
 
 OPTIONS:
 	-h, --help		# Show usage.
-	-a, --all		# Same as -e, -p (default).
-	-e, --ethernet		# Print (IPv4/IPv6) ethernet IP address.
+	-a, --all		# Same as -e|--ethernet, -l|--loopback, -p|--public (default).
+	-l, --loopback		# Print (IPv4/IPv6) (l)oopback IP address.
+	-e, --ethernet		# Print (IPv4/IPv6) (e)thernet IP address.
 	-p, --public		# Print (IPv4/IPv6) public IP address.
 	-v, --version		# Show version number.
 
@@ -25,6 +26,7 @@ EXAMPLES:
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -54,6 +56,7 @@ func (a *allFlag) String() string {
 func (a *allFlag) Set(value string) error {
 	v, _ := strconv.ParseBool(value)
 	ethernet = v
+	loopback = v
 	public = v
 	return nil
 }
@@ -81,6 +84,7 @@ func (v *versionFlag) Set(value string) error {
 var all allFlag
 var version versionFlag
 var ethernet bool
+var loopback bool
 var public bool
 
 // Globals
@@ -90,8 +94,10 @@ var bold = color.New(color.Bold).SprintFunc()
 // init () - initialize command-line flags
 func init() {
 	const (
-		usageAll        = "Same as --ethernet, --public."
+		usageAll        = "Same as -e|--ethernet, -l|--loopback -p|--public."
 		usageVersion    = "Print version"
+		defaultLoopback = false
+		usageLoopback   = "Print ethernet IP address."
 		defaultEthernet = false
 		usageEthernet   = "Print ethernet IP address."
 		defaultPublic   = false
@@ -104,6 +110,10 @@ func init() {
 	// -e, --ethernet
 	flag.BoolVar(&ethernet, "e", defaultEthernet, "")
 	flag.BoolVar(&ethernet, "ethernet", defaultEthernet, usageEthernet)
+
+	// -l, --loopback
+	flag.BoolVar(&loopback, "l", defaultLoopback, "")
+	flag.BoolVar(&loopback, "loopback", defaultLoopback, usageLoopback)
 
 	// -p, --public
 	flag.BoolVar(&public, "p", defaultPublic, "")
@@ -130,38 +140,51 @@ func main() {
 	if flag.NFlag() == 0 {
 		all.Set("true") // 1, 0, t, f, T, F, true, false, TRUE, FALSE, True, False
 	}
-	if !ethernet && !public {
+	if !ethernet && !loopback && !public {
 		statusCode = 0
 		flag.Usage()
 	} else {
-		println()
+		buffer := bufio.NewWriter(os.Stdout)
+		defer buffer.Flush()
+
 		if ethernet {
-			ipv4, ipv6 := getPrivateIP()
+			buffer.WriteRune('\n')
+			ipv4, ipv6 := getEthernetIP()
 			if len(ipv4) > 0 {
-				fmt.Printf("%s %v\n", bold("Ethernet (IPv4):"), ipv4)
+				fmt.Fprintf(buffer, "%s %v\n", bold("Ethernet (IPv4):"), ipv4)
 			}
 			if len(ipv6) > 0 {
-				fmt.Printf("%s %v\n", bold("Ethernet (IPv6):"), ipv6)
+				fmt.Fprintf(buffer, "%s %v\n", bold("Ethernet (IPv6):"), ipv6)
 			}
 		}
-		println()
+		if loopback {
+			buffer.WriteRune('\n')
+			ipv4, ipv6 := getLoopbackIP()
+			if len(ipv4) > 0 {
+				fmt.Fprintf(buffer, "%s %v\n", bold("Loopback (IPv4):"), ipv4)
+			}
+			if len(ipv6) > 0 {
+				fmt.Fprintf(buffer, "%s %v\n", bold("Loopback (IPv6):"), ipv6)
+			}
+		}
 		if public {
+			buffer.WriteRune('\n')
 			ipv4, ipv6 := getPublicIP()
 			if len(ipv4) > 0 {
-				fmt.Printf("%s %v\n", bold("Public (IPv4):"), ipv4)
+				fmt.Fprintf(buffer, "%s %v\n", bold("Public (IPv4):"), ipv4)
 			}
 			if len(ipv6) > 0 {
-				fmt.Printf("%s %v\n", bold("Public (IPv6):"), ipv6)
+				fmt.Fprintf(buffer, "%s %v\n", bold("Public (IPv6):"), ipv6)
 			}
 		}
-		println()
+		buffer.WriteRune('\n')
 	}
 }
 
 // getPublicIP () (string, string) - get public IP address
 func getPublicIP() (string, string) {
-	cv4 := make(chan string)
-	cv6 := make(chan string)
+	chV4 := make(chan string, 1)
+	chV6 := make(chan string, 1)
 
 	makeRequest := func(url string, ch chan string) {
 		resp, err := http.Get(url)
@@ -178,43 +201,98 @@ func getPublicIP() (string, string) {
 		ch <- string(body)
 	}
 
-	go makeRequest("http://v4.ident.me/", cv4)
-	go makeRequest("http://v6.ident.me/", cv6)
+	go makeRequest("http://v4.ident.me/", chV4)
+	go makeRequest("http://v6.ident.me/", chV6)
 
-	ipv4Address := <-cv4
-	ipv6Address := <-cv6
+	ipv4Address := <-chV4
+	ipv6Address := <-chV6
 
 	return strings.TrimSpace(ipv4Address), strings.TrimSpace(ipv6Address)
 }
 
+// getEthernetIP () (string, string) - get private (e)thernet IP address(es)
+func getEthernetIP() (string, string) {
+	prefixes := map[string]bool{"e": true}
+	includeLoopback := false
+
+	return getPrivateIP(prefixes, includeLoopback)
+}
+
+// getLoopbackIP () (string, string) - get private (l)oopback IP address(es)
+func getLoopbackIP() (string, string) {
+	prefixes := map[string]bool{"l": true}
+	includeLoopback := true
+
+	return getPrivateIP(prefixes, includeLoopback)
+}
+
 // getPrivateIP () (string, string) - get private IP address(es)
-func getPrivateIP() (string, string) {
+func getPrivateIP(prefixes map[string]bool, includeLoopback bool) (string, string) {
 	ipv4Addresses := []string{}
 	ipv6Addresses := []string{}
 
-	checkError := func(err error) {
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "There was an error retreiving private IP: ", err)
-			os.Exit(1)
+	chV4 := make(chan string, 20)
+	chV6 := make(chan string, 20)
+
+	go getInterface(prefixes, chV4, chV6, includeLoopback)
+
+	for {
+		select {
+		case ipv4, ok := <-chV4:
+			if !ok {
+				chV4 = nil
+			} else {
+				ipv4Addresses = append(ipv4Addresses, ipv4)
+			}
+		case ipv6, ok := <-chV6:
+			if !ok {
+				chV6 = nil
+			} else {
+				ipv6Addresses = append(ipv6Addresses, ipv6)
+			}
+		}
+		if chV4 == nil && chV6 == nil {
+			break
 		}
 	}
 
+	return joinAddresses(ipv4Addresses), joinAddresses(ipv6Addresses)
+}
+
+func getInterface(prefix map[string]bool, chV4 chan string, chV6 chan string, includeLoopback bool) {
 	ifaces, err := net.Interfaces()
-	checkError(err)
+	if err != nil {
+		close(chV4)
+		close(chV6)
+		return
+	}
 	for _, iface := range ifaces {
-		if strings.HasPrefix(iface.Name, "e") {
+		if _, ok := prefix[string(iface.Name[0])]; ok {
 			addrs, err := iface.Addrs()
-			checkError(err)
+			if err != nil {
+				close(chV4)
+				close(chV6)
+				return
+			}
 			for _, addr := range addrs {
-				if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+				if ipnet, ok := addr.(*net.IPNet); ok {
+					if !includeLoopback && ipnet.IP.IsLoopback() {
+						continue
+					}
 					if ipnet.IP.To4() != nil {
-						ipv4Addresses = append(ipv4Addresses, ipnet.IP.String())
+						chV4 <- ipnet.IP.String()
 					} else {
-						ipv6Addresses = append(ipv6Addresses, ipnet.IP.String())
+						chV6 <- ipnet.IP.String()
 					}
 				}
 			}
 		}
+
 	}
-	return strings.TrimSpace(strings.Join(ipv4Addresses, ", ")), strings.TrimSpace(strings.Join(ipv6Addresses, ", "))
+	close(chV4)
+	close(chV6)
+}
+
+func joinAddresses(addresses []string) string {
+	return strings.TrimSpace(strings.Join(addresses, ", "))
 }
