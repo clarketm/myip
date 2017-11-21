@@ -160,25 +160,29 @@ func main() {
 
 // getPublicIP () (string, string) - get public IP address
 func getPublicIP() (string, string) {
-	var ipv4Address string
-	var ipv6Address string
+	cv4 := make(chan string)
+	cv6 := make(chan string)
 
-	makeRequest := func(url string) string {
-		var ip string
+	makeRequest := func(url string, ch chan string) {
 		resp, err := http.Get(url)
 		if err != nil {
-			return ip
+			close(ch)
+			return
 		}
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return ip
+			close(ch)
+			return
 		}
-		return string(body)
+		ch <- string(body)
 	}
 
-	ipv4Address = makeRequest("http://v4.ident.me/")
-	ipv6Address = makeRequest("http://v6.ident.me/")
+	go makeRequest("http://v4.ident.me/", cv4)
+	go makeRequest("http://v6.ident.me/", cv6)
+
+	ipv4Address := <-cv4
+	ipv6Address := <-cv6
 
 	return strings.TrimSpace(ipv4Address), strings.TrimSpace(ipv6Address)
 }
