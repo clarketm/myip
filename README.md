@@ -23,7 +23,7 @@ EXAMPLES:
 
 #### Golang
 ```shell
-$ go get github.com/clarketm/myip
+$ go get -u github.com/clarketm/myip
 ```
 
 #### Source (Mac/Linux)
