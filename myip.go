@@ -40,7 +40,7 @@ import (
 )
 
 // VERSION - current version number
-const VERSION = "v1.4.1"
+const VERSION = "v1.4.2"
 
 // allFlag bool
 type allFlag bool
@@ -94,7 +94,7 @@ var bold = color.New(color.Bold).SprintFunc()
 // init () - initialize command-line flags
 func init() {
 	const (
-		usageAll        = "Same as -e|--ethernet, -l|--loopback -p|--public."
+		usageAll        = "Same as -e|--ethernet, -l|--loopback, -p|--public."
 		usageVersion    = "Print version"
 		defaultLoopback = false
 		usageLoopback   = "Print ethernet IP address."
