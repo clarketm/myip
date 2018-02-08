@@ -2,6 +2,9 @@
 
 Command line utility for displaying public and private IP addresses.
 
+![release-badge](https://img.shields.io/github/release/clarketm/myip.svg)
+![circleci-badge](https://circleci.com/gh/clarketm/myip.svg?style=shield&circle-token=51853e44a4aff2fef83b0b89407ed15288bd641c)
+
 ```shell
 NAME:
     myip – list IP addresses.
@@ -34,7 +37,7 @@ $ BUILD=darwin_amd64.tar.gz     # Mac (64 bit)
 # BUILD=linux_amd64.tar.gz      # Linux (64 bit)
 
 $ BIN_DIR=/usr/local/bin        # `bin` install directory
-$ mkdir -p $BIN_DIR     
+$ mkdir -p $BIN_DIR
 
 $ curl -L https://github.com/clarketm/myip/releases/download/v1.4.1/$BUILD | tar xz -C $BIN_DIR        # install
 ```
