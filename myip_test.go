@@ -15,7 +15,7 @@ import (
 )
 
 var ipv4Regex, _ = regexp.Compile(`(?:(?:[0-9]{1,3}\.){1,3}[0-9]{1,3},? ?)+|`)
-var ipv6Regex, _ = regexp.Compile(`(?:(?:[A-Fa-f0-9]{0,4}:){1,3}[A-Fa-f0-9]{1,4},? ?)+|`)
+var ipv6Regex, _ = regexp.Compile(`(?:(?:[A-Fa-f0-9]{0,4}:){2,7}[A-Fa-f0-9]{0,4},? ?)+|`)
 
 func TestGetEthernetIP(t *testing.T) {
 	ipv4, ipv6 := getEthernetIP()
