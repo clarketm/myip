@@ -14,12 +14,13 @@ import (
 	"testing"
 )
 
-var ipRegex, _ = regexp.Compile(`(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|`)
+var ipv4Regex, _ = regexp.Compile(`(?:(?:[0-9]{1,3}\.){1,3}[0-9]{1,3},? ?)+|`)
+var ipv6Regex, _ = regexp.Compile(`(?:(?:[A-Fa-f0-9]{0,4}:){1,3}[A-Fa-f0-9]{1,4},? ?)+|`)
 
 func TestGetEthernetIP(t *testing.T) {
 	ipv4, ipv6 := getEthernetIP()
-	fmt.Println(ipRegex.MatchString(ipv4))
-	fmt.Println(ipRegex.MatchString(ipv6))
+	fmt.Println(ipv4Regex.MatchString(ipv4))
+	fmt.Println(ipv6Regex.MatchString(ipv6))
 
 	// Output:
 	// true
@@ -28,8 +29,8 @@ func TestGetEthernetIP(t *testing.T) {
 
 func TestGetLoopbackIP(t *testing.T) {
 	ipv4, ipv6 := getLoopbackIP()
-	fmt.Println(ipRegex.MatchString(ipv4))
-	fmt.Println(ipRegex.MatchString(ipv6))
+	fmt.Println(ipv4Regex.MatchString(ipv4))
+	fmt.Println(ipv6Regex.MatchString(ipv6))
 
 	// Output:
 	// true
@@ -38,8 +39,8 @@ func TestGetLoopbackIP(t *testing.T) {
 
 func TestGetPublicI(t *testing.T) {
 	ipv4, ipv6 := getPublicIP()
-	fmt.Println(ipRegex.MatchString(ipv4))
-	fmt.Println(ipRegex.MatchString(ipv6))
+	fmt.Println(ipv4Regex.MatchString(ipv4))
+	fmt.Println(ipv6Regex.MatchString(ipv6))
 
 	// Output:
 	// true
