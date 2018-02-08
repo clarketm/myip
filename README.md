@@ -3,6 +3,7 @@
 Command line utility for displaying public and private IP addresses.
 
 ![release-badge](https://img.shields.io/github/release/clarketm/myip.svg)
+[![codacy-badge](https://api.codacy.com/project/badge/Grade/ce4b31a2e23b4959944d44f5add5234b)](https://www.codacy.com/app/clarketm/myip?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=clarketm/myip&amp;utm_campaign=Badge_Grade)
 ![circleci-badge](https://circleci.com/gh/clarketm/myip.svg?style=shield&circle-token=51853e44a4aff2fef83b0b89407ed15288bd641c)
 
 ```shell
