@@ -25,6 +25,8 @@ EXAMPLES:
     myip -a             # list all IP addresses.
 ```
 
+## Installation
+
 #### Golang
 ```shell
 $ go get -u github.com/clarketm/myip
