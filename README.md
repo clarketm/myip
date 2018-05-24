@@ -55,6 +55,7 @@ $ curl -L https://github.com/clarketm/myip/releases/download/v1.4.1/$BUILD | tar
 # Basic usage 
 $ myip
 
+
 Ethernet (IPv4): 10.0.0.1
 Ethernet (IPv6): fe80::22:a379:7bff:9092, fe80::aede:48ff:fe00:1122
 
