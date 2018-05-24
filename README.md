@@ -51,6 +51,19 @@ $ curl -L https://github.com/clarketm/myip/releases/download/v1.4.1/$BUILD | tar
 
 ## Usage
 
+```shell
+# Basic usage 
+$ myip
+
+Ethernet (IPv4): 10.0.0.1
+Ethernet (IPv6): fe80::22:a379:7bff:9092, fe80::aede:48ff:fe00:1122
+
+Loopback (IPv4): 127.0.0.1
+Loopback (IPv6): ::1, fe80::1
+
+Public (IPv4): 71.217.233.188
+```
+
 You can see the full reference documentation for the **myip** package at [godoc.org](https://godoc.org/github.com/clarketm/myip), or through go's standard documentation system:
 ```bash
 $ godoc -http=:6060
