@@ -51,8 +51,8 @@ $ curl -L https://github.com/clarketm/myip/releases/download/v1.4.1/$BUILD | tar
 
 ## Usage
 
+#### Basic usage 
 ```shell
-# Basic usage 
 $ myip
 
 
