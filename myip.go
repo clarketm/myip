@@ -40,7 +40,7 @@ import (
 )
 
 // VERSION - current version number
-const VERSION = "v1.4.3"
+const VERSION = "v1.4.4"
 
 // allFlag bool
 type allFlag bool
@@ -186,23 +186,36 @@ func getPublicIP() (string, string) {
 	chV4 := make(chan string, 1)
 	chV6 := make(chan string, 1)
 
-	makeRequest := func(url string, ch chan string) {
+	var makeRequest func(urls []string, ch chan string)
+
+	makeRequest = func(urls []string, ch chan string) {
+		url, fallbackUrls := urls[0], urls[1:]
 		resp, err := http.Get(url)
 		if err != nil {
-			close(ch)
-			return
+			if len(fallbackUrls) > 0 {
+				go makeRequest(fallbackUrls, ch)
+				return
+			} else {
+				close(ch)
+				return
+			}
 		}
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			close(ch)
-			return
+			if len(fallbackUrls) > 0 {
+				go makeRequest(fallbackUrls, ch)
+				return
+			} else {
+				close(ch)
+				return
+			}
 		}
 		ch <- string(body)
 	}
 
-	go makeRequest("http://v4.ident.me/", chV4)
-	go makeRequest("http://v6.ident.me/", chV6)
+	go makeRequest([]string{"http://v4.ident.me/", "https://ipv4.travismclarke.com/"}, chV4)
+	go makeRequest([]string{"http://v6.ident.me/", "https://ipv6.travismclarke.com/"}, chV6)
 
 	ipv4Address := <-chV4
 	ipv6Address := <-chV6
