@@ -73,3 +73,9 @@ $ godoc -http=:6060
 
 # Open browser to: "http://localhost:6060/pkg/github.com/clarketm/myip"  to view godoc.
 ```
+
+## Related
+* [public-ip](https://github.com/clarketm/public-ip) – A simple public IP address API
+
+## License#
+Apache-2.0 &copy; [**Travis Clarke**](https://blog.travismclarke.com/)
