@@ -77,5 +77,5 @@ $ godoc -http=:6060
 ## Related
 * [public-ip](https://github.com/clarketm/public-ip) – A simple public IP address API
 
-## License#
+## License
 Apache-2.0 &copy; [**Travis Clarke**](https://blog.travismclarke.com/)
