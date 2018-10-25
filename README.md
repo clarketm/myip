@@ -65,6 +65,13 @@ Loopback (IPv6): ::1, fe80::1
 Public (IPv4): 71.217.233.188
 ```
 
+#### Get public IP address
+```shell
+# Same as `myip -p`
+$ myip --public
+
+Public (IPv4): 71.217.233.188
+```
 ---
 
 You can see the full reference documentation for the **myip** package at [godoc.org](https://godoc.org/github.com/clarketm/myip), or through go's standard documentation system:
