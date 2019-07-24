@@ -42,11 +42,11 @@ $ BUILD=darwin_amd64.tar.gz     # Mac (64 bit)
 $ BIN_DIR=/usr/local/bin        # `bin` install directory
 $ mkdir -p $BIN_DIR
 
-$ curl -L https://github.com/clarketm/myip/releases/download/v1.4.1/$BUILD | tar xz -C $BIN_DIR        # install
+$ curl -L https://github.com/clarketm/myip/releases/download/v1.4.4/$BUILD | tar xz -C $BIN_DIR        # install
 ```
 
 #### Source (Windows)
-* https://github.com/clarketm/myip/releases/download/v1.4.1/windows_amd64.zip
+* https://github.com/clarketm/myip/releases/download/v1.4.4/windows_amd64.zip
 
 
 ## Usage
